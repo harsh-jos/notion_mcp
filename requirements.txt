@@ -1,6 +1,5 @@
-mcp-use
-streamlit
-python-dotenv
-google-generativeai
-langchain-google-genai
-langchain
+google-generativeai==0.8.5
+langchain==0.3.27
+langchain-google-genai==2.0.10
+mcp-use==1.3.11
+streamlit==1.51.0
