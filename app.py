@@ -5,26 +5,21 @@ import json
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from mcp_use import MCPClient, MCPAgent
-# Note: The import paths for mcp_use might vary slightly depending on the exact version, 
-# but based on standard python packaging, this is the most likely structure.
-# If mcp_use exposes them differently, we might need to adjust.
 
-# Load environment variables
+# Load environment variables (keeping this in case other env vars are needed, but removing GEMINI_API_KEY check)
 load_dotenv()
-
-# Configure Gemini
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-
-if not GEMINI_API_KEY:
-    st.error("GEMINI_API_KEY not found in .env")
-    st.stop()
-
-
 
 # Streamlit App Config
 st.set_page_config(page_title="Notion MCP Chatbot", page_icon="Rb")
 st.title("Notion MCP Chatbot")
+
+# Sidebar for API Key
+st.sidebar.title("Configuration")
+gemini_api_key = st.sidebar.text_input("Gemini API Key", type="password")
+
+if not gemini_api_key:
+    st.warning("Please enter your Gemini API Key in the sidebar to continue.")
+    st.stop()
 
 # Initialize Session State
 if "messages" not in st.session_state:
@@ -32,13 +27,13 @@ if "messages" not in st.session_state:
 
 # Cache the Agent initialization to avoid recreating it on every rerun
 @st.cache_resource
-def get_agent():
+def get_agent(api_key):
     # Initialize MCP Client from config file
     client = MCPClient.from_config_file("mcp_config.json")
     
     # Initialize Gemini Model using LangChain wrapper
     # Using gemini-2.5-flash as requested
-    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=GEMINI_API_KEY)
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
     
     # Initialize MCP Agent
     # We pass the client and the model. 
@@ -50,8 +45,8 @@ def get_agent():
     return agent
 
 # Async function to handle chat
-async def chat_handler(prompt):
-    agent = get_agent()
+async def chat_handler(prompt, api_key):
+    agent = get_agent(api_key)
     
     # Add user message to history
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -67,8 +62,6 @@ async def chat_handler(prompt):
         
         try:
             # Call the agent
-            # Assuming agent.chat or agent.process is the method
-            # and it returns a response or a stream
             response = await agent.run(prompt)
             
             # If response is a string
@@ -91,4 +84,4 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Ask something about your Notion workspace..."):
-    asyncio.run(chat_handler(prompt))
+    asyncio.run(chat_handler(prompt, gemini_api_key))
