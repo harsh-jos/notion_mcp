@@ -1,13 +1,8 @@
 import streamlit as st
 import asyncio
-import os
 import json
-from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from mcp_use import MCPClient, MCPAgent
-
-# Load environment variables (keeping this in case other env vars are needed, but removing GEMINI_API_KEY check)
-load_dotenv()
 
 # Streamlit App Config
 st.set_page_config(page_title="Notion MCP Chatbot", page_icon="Rb")
